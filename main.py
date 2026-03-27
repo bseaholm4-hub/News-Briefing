@@ -14,8 +14,12 @@ GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"]
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", GMAIL_ADDRESS)
 
-# ── Step 1: Intelligence Gatherer Prompt ────────────────────────────
-GATHERER_PROMPT = """You are a Senior Geopolitical Intelligence Analyst specializing in global supply chains and energy security. Your goal is to provide a high-density intelligence brief on the 2026 global crisis.
+# ── Prompts are built at runtime so we can inject today's real date ──
+
+def build_gatherer_prompt(today: str) -> str:
+    return f"""You are a Senior Geopolitical Intelligence Analyst specializing in global supply chains and energy security. Your goal is to provide a high-density intelligence brief on the 2026 global crisis.
+
+TODAY'S DATE IS: {today}. All references to dates in this report MUST be consistent with this date. Do NOT invent or hallucinate a different date.
 
 Focus Areas:
 - **Middle East Conflict:** Update on the 5-day pause, Iran power grid status, and Israeli ground movements.
@@ -23,16 +27,20 @@ Focus Areas:
 - **The 'Total Economic Siege':** Specific updates on the Strait of Hormuz (mines/tolls) and the global fertilizer/food crisis.
 - **Supply Chain Data:** Latest Brent crude prices, tanker rates, and any major port disruptions (e.g., Rotterdam cyberattacks).
 
-Constraint: Use Markdown headers. Prioritize data points and actionable intelligence over prose."""
+Constraint: Use Markdown headers. Prioritize data points and actionable intelligence over prose. Do NOT include a Subject line, Date line, or TO/FROM header — just the report body."""
 
-# ── Step 2: Executive Editor Prompt ─────────────────────────────────
-EDITOR_PROMPT = """Below is a raw intelligence report from our field analysts. Please rewrite and enhance this for a Chief of Staff at a global logistics firm.
+
+def build_editor_prompt(today: str) -> str:
+    return f"""Below is a raw intelligence report from our field analysts. Please rewrite and enhance this for a Chief of Staff at a global logistics firm.
+
+TODAY'S DATE IS: {today}. Use ONLY this date in the report. Do NOT change, invent, or hallucinate any other date.
 
 Instructions:
 - **Executive Summary:** Start with a 3-bullet 'Bottom Line Up Front' (BLUF).
 - **Supply Chain Impact:** Explicitly call out risks to shipping lanes and lead times for high-tech hardware.
 - **The 'Delta':** If the input mentions a change from yesterday (e.g., a new port closure or price spike), highlight it in **bold**.
 - **Formatting:** Use professional, concise language. Remove all AI conversational filler. Format as a clean, structured report ready for an automated email.
+- **No meta-headers:** Do NOT add Subject, Date, TO, or FROM lines — those are handled by the email system. Start directly with the Executive Summary.
 
 Raw Intelligence to Refine:
 """
@@ -67,13 +75,15 @@ def md_to_html(text: str) -> str:
         extensions=["tables", "fenced_code", "nl2br"],
     )
 
-    # Strip any rogue Subject/Date lines Gemini sometimes injects at the top
-    raw_html = re.sub(
-        r"<p>\s*<strong>Subject:.*?</p>", "", raw_html, flags=re.DOTALL
-    )
-    raw_html = re.sub(
-        r"<p>\s*<strong>Date:</strong>.*?</p>", "", raw_html, flags=re.DOTALL
-    )
+    # Strip any rogue meta-header lines Gemini sometimes injects at the top
+    for label in ["Subject", "Date", "TO", "FROM", "SUBJECT", "DATE"]:
+        raw_html = re.sub(
+            rf"<p>\s*<strong>{label}:?</strong>.*?</p>", "", raw_html, flags=re.DOTALL | re.IGNORECASE
+        )
+        # Also catch non-bold variants like "TO: Chief of Staff"
+        raw_html = re.sub(
+            rf"<p>\s*{label}\s*:.*?</p>", "", raw_html, flags=re.DOTALL | re.IGNORECASE
+        )
     return raw_html
 
 
@@ -177,12 +187,12 @@ def main():
 
     # Step 1: Intelligence Gatherer
     print("Step 1: Calling Gemini as Intelligence Gatherer...")
-    raw_report = call_gemini(GATHERER_PROMPT)
+    raw_report = call_gemini(build_gatherer_prompt(today))
     print(f"Got raw intelligence ({len(raw_report)} chars)")
 
     # Step 2: Executive Editor
     print("Step 2: Calling Gemini as Executive Editor...")
-    editor_input = EDITOR_PROMPT + raw_report
+    editor_input = build_editor_prompt(today) + raw_report
     final_report = call_gemini(editor_input)
     print(f"Got final report ({len(final_report)} chars)")
 
