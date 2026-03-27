@@ -5,7 +5,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import requests
-import json
 
 # ── Config from GitHub Secrets ──────────────────────────────────────
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
@@ -13,8 +12,28 @@ GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"]
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", GMAIL_ADDRESS)
 
-# ── Your prompt (edit this or load from env) ────────────────────────
-PROMPT = os.environ.get("GEMINI_PROMPT", "Give me a daily briefing on the latest developments in AI, supply chain technology, and enterprise SaaS. Keep it concise and actionable.")
+# ── Step 1: Intelligence Gatherer Prompt ────────────────────────────
+GATHERER_PROMPT = """You are a Senior Geopolitical Intelligence Analyst specializing in global supply chains and energy security. Your goal is to provide a high-density intelligence brief on the 2026 global crisis.
+
+Focus Areas:
+- **Middle East Conflict:** Update on the 5-day pause, Iran power grid status, and Israeli ground movements.
+- **China Fuel Export Ban:** Current status of refined fuel exports and impact on the Asia-Pacific region.
+- **The 'Total Economic Siege':** Specific updates on the Strait of Hormuz (mines/tolls) and the global fertilizer/food crisis.
+- **Supply Chain Data:** Latest Brent crude prices, tanker rates, and any major port disruptions (e.g., Rotterdam cyberattacks).
+
+Constraint: Use Markdown headers. Prioritize data points and actionable intelligence over prose."""
+
+# ── Step 2: Executive Editor Prompt ─────────────────────────────────
+EDITOR_PROMPT = """Below is a raw intelligence report from our field analysts. Please rewrite and enhance this for a Chief of Staff at a global logistics firm.
+
+Instructions:
+- **Executive Summary:** Start with a 3-bullet 'Bottom Line Up Front' (BLUF).
+- **Supply Chain Impact:** Explicitly call out risks to shipping lanes and lead times for high-tech hardware.
+- **The 'Delta':** If the input mentions a change from yesterday (e.g., a new port closure or price spike), highlight it in **bold**.
+- **Formatting:** Use professional, concise language. Remove all AI conversational filler. Format as a clean, structured report ready for an automated email.
+
+Raw Intelligence to Refine:
+"""
 
 
 def call_gemini(prompt: str) -> str:
@@ -49,10 +68,10 @@ def send_email(subject: str, body: str):
     # HTML version (wraps Gemini markdown-ish output in basic styling)
     html_body = f"""
     <html>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-                 max-width: 680px; margin: 0 auto; padding: 24px; 
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                 max-width: 680px; margin: 0 auto; padding: 24px;
                  color: #1a1a1a; line-height: 1.6;">
-        <h2 style="border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; 
+        <h2 style="border-bottom: 1px solid #e0e0e0; padding-bottom: 8px;
                     font-weight: 500; color: #111;">
             {subject}
         </h2>
@@ -76,16 +95,24 @@ def send_email(subject: str, body: str):
 
 def main():
     today = datetime.now().strftime("%A, %B %d, %Y")
-    print(f"🚀 Running daily Gemini automation — {today}")
+    print(f"Running daily Gemini automation — {today}")
 
-    print("📡 Calling Gemini API...")
-    result = call_gemini(PROMPT)
-    print(f"✅ Got response ({len(result)} chars)")
+    # Step 1: Intelligence Gatherer
+    print("Step 1: Calling Gemini as Intelligence Gatherer...")
+    raw_report = call_gemini(GATHERER_PROMPT)
+    print(f"Got raw intelligence ({len(raw_report)} chars)")
 
-    subject = f"Daily Gemini Brief — {today}"
-    print(f"📧 Sending email to {RECIPIENT_EMAIL}...")
-    send_email(subject, result)
-    print("✅ Email sent successfully!")
+    # Step 2: Executive Editor
+    print("Step 2: Calling Gemini as Executive Editor...")
+    editor_input = EDITOR_PROMPT + raw_report
+    final_report = call_gemini(editor_input)
+    print(f"Got final report ({len(final_report)} chars)")
+
+    # Send the polished report
+    subject = f"Daily Intelligence Brief — {today}"
+    print(f"Sending email to {RECIPIENT_EMAIL}...")
+    send_email(subject, final_report)
+    print("Email sent successfully!")
 
 
 if __name__ == "__main__":
