@@ -21,11 +21,19 @@ def build_gatherer_prompt(today: str) -> str:
 
 TODAY'S DATE IS: {today}. All references to dates in this report MUST be consistent with this date. Do NOT invent or hallucinate a different date.
 
+CRITICAL — FRESHNESS RULE: This is a DAILY briefing. The reader already knows what happened before today.
+- ONLY report developments from the LAST 24 HOURS (since yesterday's brief).
+- Do NOT repeat background context or recap events from previous days. The reader is already briefed.
+- If there is NO new development on a topic today, say "No significant change in the last 24 hours" — do NOT pad with old news.
+- For each item, lead with WHAT CHANGED TODAY, not the backstory.
+- Example of what NOT to do: "President Trump announced a 5-day pause on March 23..." — the reader already knows this.
+- Example of what TO do: "Day 4 of the 5-day pause: no violations reported. Iran has not responded to the Hormuz reopening condition."
+
 Focus Areas:
-- **Middle East Conflict:** Update on the 5-day pause, Iran power grid status, and Israeli ground movements.
-- **China Fuel Export Ban:** Current status of refined fuel exports and impact on the Asia-Pacific region.
-- **The 'Total Economic Siege':** Specific updates on the Strait of Hormuz (mines/tolls) and the global fertilizer/food crisis.
-- **Supply Chain Data:** Latest Brent crude prices, tanker rates, and any major port disruptions (e.g., Rotterdam cyberattacks).
+- **Middle East Conflict:** What changed TODAY — any new strikes, diplomatic moves, or violations of the pause?
+- **China Fuel Export Ban:** Any new developments, exemptions, or price movements TODAY?
+- **The 'Total Economic Siege':** New incidents in the Strait of Hormuz? Any changes to mine clearance, tolls, or insurance rates TODAY?
+- **Supply Chain Data:** TODAY's Brent crude price, tanker rate changes, and any NEW port disruptions or status changes.
 
 Constraint: You MUST use Google Search to find current, real-time data for every claim. Do NOT fabricate or estimate any figures — search for the actual current values. Use Markdown headers. Prioritize data points and actionable intelligence over prose. Do NOT include a Subject line, Date line, or TO/FROM header — just the report body."""
 
@@ -36,9 +44,10 @@ def build_editor_prompt(today: str) -> str:
 TODAY'S DATE IS: {today}. Use ONLY this date in the report. Do NOT change, invent, or hallucinate any other date.
 
 Instructions:
-- **Executive Summary:** Start with a 3-bullet 'Bottom Line Up Front' (BLUF).
+- **Executive Summary:** Start with a 3-bullet 'Bottom Line Up Front' (BLUF). Each bullet should describe what CHANGED in the last 24 hours, not standing conditions.
 - **Supply Chain Impact:** Explicitly call out risks to shipping lanes and lead times for high-tech hardware.
-- **The 'Delta':** If the input mentions a change from yesterday (e.g., a new port closure or price spike), highlight it in **bold**.
+- **The 'Delta':** This is the most important part. Every section should lead with what is NEW or CHANGED since yesterday. Highlight changes in **bold**. If nothing changed on a topic, state that briefly and move on — do not fill space with background recap.
+- **No backstory:** The reader receives this brief daily. Do NOT explain what the 5-day pause is, who announced it, or when it started. Just state today's status.
 - **Formatting:** Use professional, concise language. Remove all AI conversational filler. Format as a clean, structured report ready for an automated email.
 - **No meta-headers:** Do NOT add Subject, Date, TO, or FROM lines — those are handled by the email system. Start directly with the Executive Summary.
 
