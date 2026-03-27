@@ -38,7 +38,7 @@ Raw Intelligence to Refine:
 
 def call_gemini(prompt: str) -> str:
     """Call Gemini API and return the response text."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -49,7 +49,9 @@ def call_gemini(prompt: str) -> str:
     }
 
     response = requests.post(url, json=payload, timeout=60)
-    response.raise_for_status()
+    if not response.ok:
+        print(f"Gemini API error {response.status_code}: {response.text}")
+        response.raise_for_status()
 
     data = response.json()
     return data["candidates"][0]["content"]["parts"][0]["text"]
