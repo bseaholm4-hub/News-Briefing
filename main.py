@@ -27,7 +27,7 @@ Focus Areas:
 - **The 'Total Economic Siege':** Specific updates on the Strait of Hormuz (mines/tolls) and the global fertilizer/food crisis.
 - **Supply Chain Data:** Latest Brent crude prices, tanker rates, and any major port disruptions (e.g., Rotterdam cyberattacks).
 
-Constraint: Use Markdown headers. Prioritize data points and actionable intelligence over prose. Do NOT include a Subject line, Date line, or TO/FROM header — just the report body."""
+Constraint: You MUST use Google Search to find current, real-time data for every claim. Do NOT fabricate or estimate any figures — search for the actual current values. Use Markdown headers. Prioritize data points and actionable intelligence over prose. Do NOT include a Subject line, Date line, or TO/FROM header — just the report body."""
 
 
 def build_editor_prompt(today: str) -> str:
@@ -46,25 +46,40 @@ Raw Intelligence to Refine:
 """
 
 
-def call_gemini(prompt: str) -> str:
-    """Call Gemini API and return the response text."""
+def call_gemini(prompt: str, use_search: bool = False) -> str:
+    """Call Gemini API and return the response text.
+
+    Args:
+        prompt: The prompt to send.
+        use_search: If True, enable Google Search grounding so the model
+                    can pull real-time data before generating.
+    """
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "temperature": 0.7,
-            "maxOutputTokens": 4096,
+            "maxOutputTokens": 8192,
         },
     }
 
-    response = requests.post(url, json=payload, timeout=60)
+    # Enable Google Search grounding for real-time data
+    if use_search:
+        payload["tools"] = [{"google_search": {}}]
+
+    response = requests.post(url, json=payload, timeout=120)
     if not response.ok:
         print(f"Gemini API error {response.status_code}: {response.text}")
         response.raise_for_status()
 
     data = response.json()
-    return data["candidates"][0]["content"]["parts"][0]["text"]
+
+    # With grounding, the response may have multiple parts (text + search results).
+    # Extract only the text parts.
+    parts = data["candidates"][0]["content"]["parts"]
+    text_parts = [p["text"] for p in parts if "text" in p]
+    return "\n".join(text_parts)
 
 
 def md_to_html(text: str) -> str:
@@ -187,7 +202,7 @@ def main():
 
     # Step 1: Intelligence Gatherer
     print("Step 1: Calling Gemini as Intelligence Gatherer...")
-    raw_report = call_gemini(build_gatherer_prompt(today))
+    raw_report = call_gemini(build_gatherer_prompt(today), use_search=True)
     print(f"Got raw intelligence ({len(raw_report)} chars)")
 
     # Step 2: Executive Editor
