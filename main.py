@@ -14,61 +14,117 @@ GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"]
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", GMAIL_ADDRESS)
 
-# ── Prompts are built at runtime so we can inject today's real date ──
+# ── Focus areas ─────────────────────────────────────────────────────
+FOCUS_AREAS = [
+    "Russia-Ukraine War — front-line shifts, weapons deliveries, negotiations, sanctions enforcement",
+    "Middle East — Israel-Gaza, Israel-Iran, Houthi activity, Gulf state diplomacy, ceasefire status",
+    "China — military posturing (Taiwan Strait, South China Sea), trade war moves, Belt & Road, internal politics",
+    "US Foreign Policy — alliance shifts, sanctions, diplomatic signals, defense posture changes",
+    "Oil & Energy — Brent/WTI prices, OPEC+ moves, pipeline disruptions, Strait of Hormuz, LNG flows",
+    "AI Race — frontier model releases, chip export controls, GPU supply, government regulation, US-China AI competition",
+    "Global Trade & Tariffs — new tariffs, retaliatory measures, supply chain shifts, de-risking moves",
+    "NATO & European Security — defense spending, troop deployments, EU policy, Eastern Europe",
+    "Nuclear & Proliferation — Iran enrichment, North Korea tests, arms control agreements",
+    "Emerging Flashpoints — any new or escalating conflict, coup, crisis, or major protest movement",
+]
+
+# ── Prompts ─────────────────────────────────────────────────────────
 
 def build_gatherer_prompt(today: str) -> str:
-    return f"""You are a Senior Geopolitical Intelligence Analyst specializing in global supply chains and energy security. Your goal is to provide a high-density intelligence brief on the 2026 global crisis.
+    focus_block = "\n".join(f"  {i+1}. {area}" for i, area in enumerate(FOCUS_AREAS))
 
-TODAY'S DATE IS: {today}. All references to dates in this report MUST be consistent with this date. Do NOT invent or hallucinate a different date.
+    return f"""You are a political intelligence analyst. Search for today's developments across every focus area below and produce a raw fact sheet.
 
-CRITICAL — FRESHNESS RULE: This is a DAILY briefing. The reader already knows what happened before today.
-- ONLY report developments from the LAST 24 HOURS (since yesterday's brief).
-- Do NOT repeat background context or recap events from previous days. The reader is already briefed.
-- If there is NO new development on a topic today, say "No significant change in the last 24 hours" — do NOT pad with old news.
-- For each item, lead with WHAT CHANGED TODAY, not the backstory.
-- Example of what NOT to do: "President Trump announced a 5-day pause on March 23..." — the reader already knows this.
-- Example of what TO do: "Day 4 of the 5-day pause: no violations reported. Iran has not responded to the Hormuz reopening condition."
+TODAY'S DATE: {today}
+All dates MUST be consistent with this. Do NOT hallucinate dates.
 
-Focus Areas:
-- **Middle East Conflict:** What changed TODAY — any new strikes, diplomatic moves, or violations of the pause?
-- **China Fuel Export Ban:** Any new developments, exemptions, or price movements TODAY?
-- **The 'Total Economic Siege':** New incidents in the Strait of Hormuz? Any changes to mine clearance, tolls, or insurance rates TODAY?
-- **Supply Chain Data:** TODAY's Brent crude price, tanker rate changes, and any NEW port disruptions or status changes.
+═══ FRESHNESS — NON-NEGOTIABLE ═══
+• ONLY report what happened in the LAST 24 HOURS. The reader is already briefed on everything before today.
+• If nothing happened on a topic, say so in one line and move on. Do NOT pad with background.
 
-Constraint: You MUST use Google Search to find current, real-time data for every claim. Do NOT fabricate or estimate any figures — search for the actual current values. Use Markdown headers. Prioritize data points and actionable intelligence over prose. Do NOT include a Subject line, Date line, or TO/FROM header — just the report body."""
+═══ FOCUS AREAS ═══
+{focus_block}
+
+═══ SOURCING — STRICT ═══
+• Use Google Search for EVERY claim. Do NOT fabricate figures.
+• IGNORE any source older than 48 hours. If the only results are older, the topic has no news today.
+• **Two-source rule:** Only report a claim if you can confirm it in 2+ independent sources. Cite both — e.g., (Reuters, Mar 29; AFP, Mar 29).
+• If a claim appears in only ONE source, you may still include it but you MUST flag it: mark it with "[single source]" so the editor knows.
+• If you cannot find ANY reliable source for a claim, omit it entirely.
+
+═══ OUTPUT ═══
+For each focus area, write:
+
+## [Topic]
+- [Fact 1 with source]
+- [Fact 2 with source]
+- [Fact 3 if applicable]
+
+If no news: "## [Topic]\\nNo significant developments." and move on.
+
+Keep it factual and dense. No analysis, no filler, no AI pleasantries. Under 2,000 words total."""
 
 
 def build_editor_prompt(today: str) -> str:
-    return f"""Below is a raw intelligence report from our field analysts. Please rewrite and enhance this for a Chief of Staff at a global logistics firm.
+    return f"""You are a sharp political analyst writing a daily intelligence brief. Below is today's raw fact sheet. Your job is to turn each item into a short, opinionated analytical hit — the kind of thing a well-connected strategist would say over coffee to a CEO.
 
-TODAY'S DATE IS: {today}. Use ONLY this date in the report. Do NOT change, invent, or hallucinate any other date.
+TODAY'S DATE: {today}. Use ONLY this date.
 
-Instructions:
-- **Executive Summary:** Start with a 3-bullet 'Bottom Line Up Front' (BLUF). Each bullet should describe what CHANGED in the last 24 hours, not standing conditions.
-- **Supply Chain Impact:** Explicitly call out risks to shipping lanes and lead times for high-tech hardware.
-- **The 'Delta':** This is the most important part. Every section should lead with what is NEW or CHANGED since yesterday. Highlight changes in **bold**. If nothing changed on a topic, state that briefly and move on — do not fill space with background recap.
-- **No backstory:** The reader receives this brief daily. Do NOT explain what the 5-day pause is, who announced it, or when it started. Just state today's status.
-- **Formatting:** Use professional, concise language. Remove all AI conversational filler. Format as a clean, structured report ready for an automated email.
-- **No meta-headers:** Do NOT add Subject, Date, TO, or FROM lines — those are handled by the email system. Start directly with the Executive Summary.
+═══ VOICE & STYLE ═══
+You are not a reporter. You are an analyst. Your reader is smart, busy, and already follows the news — they come to you for MEANING, not summary.
 
-Raw Intelligence to Refine:
+For each update:
+1. **Lead with the "so what" — a single sentence that frames why this fact matters or where it points.** This is the analytical lens, the connective tissue. It should feel like insight, not prediction. Do NOT use phrases like "Looking ahead," "This could mean," "Time will tell," "It remains to be seen," or "This is worth watching." Instead, just STATE the implication as if it's obvious to anyone paying attention.
+2. **Then give the fact** — tight, sourced, one or two sentences max.
+
+Example of what you're going for:
+> ## Russia-Ukraine
+> **The artillery math is shifting.** Czech-brokered shell deliveries are now outpacing Russian expenditure rates for the first time since 2022. 300,000 rounds arrived in Kyiv this week alone (FT, Mar 28). Meanwhile, Russia's Tula ammunition plants are running triple shifts with 40% reject rates (ISW, Mar 28).
+
+Example of what NOT to do:
+> Looking ahead, this could shift the balance on the front lines. Time will tell whether...
+
+═══ STRUCTURE ═══
+
+**## Executive Summary**
+3-4 bullets. Each one = the single most important analytical takeaway from a different region/topic. Not a list of events — a list of MEANINGS. One sharp sentence each.
+
+**Then: one section per topic from the raw intel.**
+- Use ## headers for each topic.
+- Within each topic, you may have 1-3 analytical hits depending on how much happened.
+- Each hit follows the pattern: **bold analytical frame** → sourced fact(s).
+- If the raw intel says "No significant developments," drop the topic entirely — do not include it.
+
+**## Watchlist**
+End with 2-3 bullets: things in the next 48 hours that are worth paying attention to (scheduled events, deadlines, decisions). Frame each one with why it matters, not just what it is.
+
+═══ RULES ═══
+• Short sections. This is a scan-read document, not an essay. Aim for 2-4 sentences per topic, not paragraphs.
+• Preserve all source citations from the raw intel.
+• If a fact is tagged "[single source]", keep it but add *(unconfirmed)* after it so the reader knows.
+• No meta-headers (Subject, Date, TO, FROM). Start with ## Executive Summary.
+• No AI filler, no "certainly," no "here's your brief," no sign-offs.
+• Total output: under 1,000 words. Brevity is the point.
+
+═══ RAW INTELLIGENCE ═══
 """
 
 
-def call_gemini(prompt: str, use_search: bool = False) -> str:
+def call_gemini(prompt: str, use_search: bool = False, model: str = "gemini-2.5-flash") -> str:
     """Call Gemini API and return the response text.
 
     Args:
         prompt: The prompt to send.
         use_search: If True, enable Google Search grounding so the model
                     can pull real-time data before generating.
+        model: Which Gemini model to use.
     """
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.7,
+            "temperature": 0.3 if use_search else 0.4,
             "maxOutputTokens": 8192,
         },
     }
@@ -77,7 +133,8 @@ def call_gemini(prompt: str, use_search: bool = False) -> str:
     if use_search:
         payload["tools"] = [{"google_search": {}}]
 
-    response = requests.post(url, json=payload, timeout=120)
+    timeout = 180 if "pro" in model else 120
+    response = requests.post(url, json=payload, timeout=timeout)
     if not response.ok:
         print(f"Gemini API error {response.status_code}: {response.text}")
         response.raise_for_status()
@@ -211,13 +268,13 @@ def main():
 
     # Step 1: Intelligence Gatherer
     print("Step 1: Calling Gemini as Intelligence Gatherer...")
-    raw_report = call_gemini(build_gatherer_prompt(today), use_search=True)
+    raw_report = call_gemini(build_gatherer_prompt(today), use_search=True, model="gemini-2.5-pro")
     print(f"Got raw intelligence ({len(raw_report)} chars)")
 
     # Step 2: Executive Editor
     print("Step 2: Calling Gemini as Executive Editor...")
     editor_input = build_editor_prompt(today) + raw_report
-    final_report = call_gemini(editor_input)
+    final_report = call_gemini(editor_input, use_search=True)
     print(f"Got final report ({len(final_report)} chars)")
 
     # Send the polished report
