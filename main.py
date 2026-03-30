@@ -39,26 +39,29 @@ TODAY'S DATE: {today}
 All dates MUST be consistent with this. Do NOT hallucinate dates.
 
 ═══ FRESHNESS — NON-NEGOTIABLE ═══
-• ONLY report what happened in the LAST 24 HOURS. The reader is already briefed on everything before today.
+• ONLY report what happened in the LAST 24 HOURS (since yesterday, {today}).
 • If nothing happened on a topic, say so in one line and move on. Do NOT pad with background.
+• CHECK THE DATE on every source you find. If the article/report is dated more than 24 hours before {today}, DO NOT USE IT. A March 26 source is NOT fresh on March 30. A March 20 source is NOT fresh on March 30. Only use sources dated {today} or the day immediately before.
 
 ═══ FOCUS AREAS ═══
 {focus_block}
 
 ═══ SOURCING — STRICT ═══
 • Use Google Search for EVERY claim. Do NOT fabricate figures.
-• IGNORE any source older than 48 hours. If the only results are older, the topic has no news today.
+• **Recency check:** For each source, verify the publication date. REJECT any source older than 24 hours from {today}. If the only results are older, that topic has NO NEWS today — say so and move on.
 • **Two-source rule:** Only report a claim if you can confirm it in 2+ independent sources. Cite both — e.g., (Reuters, Mar 29; AFP, Mar 29).
 • If a claim appears in only ONE source, you may still include it but you MUST flag it: mark it with "[single source]" so the editor knows.
 • If you cannot find ANY reliable source for a claim, omit it entirely.
 
 ═══ OUTPUT ═══
-For each focus area, write:
+For each focus area, write SEPARATE bullet points — one fact per bullet:
 
 ## [Topic]
-- [Fact 1 with source]
-- [Fact 2 with source]
-- [Fact 3 if applicable]
+- [Fact 1 — one sentence max] (Source, Date; Source, Date)
+- [Fact 2 — one sentence max] (Source, Date; Source, Date)
+- [Fact 3 — one sentence max] (Source, Date)
+
+IMPORTANT: Each bullet = ONE discrete development. Do NOT combine multiple events into a single bullet. If Israel struck Iran AND Iran struck Israel AND Houthis struck Israel, those are THREE separate bullets.
 
 If no news: "## [Topic]\\nNo significant developments." and move on.
 
@@ -107,31 +110,43 @@ GOOD — connects dots:
 BAD — newspaper summary:
 > **Widespread "No Kings" protests across the US and Europe highlight growing domestic opposition to the Trump administration's foreign policy and perceived authoritarianism.**
 
-═══ STRUCTURE ═══
+═══ STRUCTURE — FOLLOW EXACTLY ═══
 
 **## Executive Summary**
-3-4 bullets. Each bullet must pass this test: could someone tell WHAT DAY this was written just from the bullet? If not, it's too vague. Include a specific fact, number, or named development. One sharp sentence each, with the analytical frame built in.
+3-4 bullets. Each bullet = ONE sentence, MAX 25 words. Must include a specific fact or number. Do NOT repeat these sentences anywhere else in the brief.
 
-**Then: one section per topic from the raw intel.**
-- Use ## headers for each topic.
-- **MAX 2-3 hits per section.** Merge related facts into one hit. Each hit = one bold frame + one sourced fact sentence.
-- If the raw intel says "No significant developments," drop the topic entirely.
+BAD (too long, no number): "Washington's explicit warning about diverting Patriot missiles to the Middle East signals a strategic pivot, forcing European allies to confront a diminished U.S. commitment to Ukraine's air defense."
+GOOD (tight, specific): "White House warned allies Patriot shipments to Ukraine may halt — the Iran war is now cannibalizing European air defense."
+
+**Then: one ## section per topic.**
+Each section contains 1-3 SEPARATE hits. Each hit is exactly two lines:
+Line 1: **Bold analytical frame.** (one sentence, max 20 words)
+Line 2: Sourced fact. (one sentence, max 30 words)
+
+Then a blank line before the next hit. Like this:
+
+**Bold frame sentence.**
+Fact sentence with source (Reuters, Mar 29).
+
+**Next bold frame.**
+Next fact sentence (AP, Mar 29).
+
+Do NOT write hits as a single paragraph. Do NOT combine multiple developments into one hit. Each hit gets its own two lines.
+
+If the raw intel says "No significant developments," drop that topic entirely — do not include it.
 
 **## Watchlist**
-2-3 bullets. Each must name a SPECIFIC scheduled event, deadline, vote, meeting, data release, or decision in the next 48 hours. State why it matters in the same sentence. If you cannot name a specific event, do not include a bullet.
-
-BAD: "Oil futures movements today will gauge investor confidence."
-GOOD: "OPEC+ emergency call reportedly being organized for midweek — any output hike announcement caps the price rally."
+2-3 bullets. Each must name a SPECIFIC scheduled event in the next 48 hours plus why it matters, in one sentence.
 
 ═══ RULES ═══
-• **HARD LIMIT: 700 words max.** Brevity IS the product.
-• Max 2-3 hits per section. No section exceeds 3 sentences total.
-• ONE fact per hit. Do NOT jam two unrelated stories into one paragraph.
-• Preserve all source citations from the raw intel.
-• If a fact is tagged "[single source]", keep it but add *(unconfirmed)* after it.
+• **HARD LIMIT: 600 words max.** Count before outputting. If over, cut the weakest hits.
+• Executive summary bullets must NOT be copy-pasted into sections. The summary is a separate, original distillation.
+• Max 20 words per bold frame. Max 30 words per fact sentence. No exceptions.
+• ONE development per hit. Israel strikes Iran = one hit. Iran strikes Israel = a different hit. Do NOT combine.
+• Preserve source citations. If tagged "[single source]", add *(unconfirmed)*.
 • No meta-headers (Subject, Date, TO, FROM). Start directly with ## Executive Summary.
-• No AI filler, no "certainly," no "here's your brief," no sign-offs.
-• Cut every word that doesn't earn its place.
+• No AI filler, no sign-offs.
+• Omit any topic where ALL sources are older than 24 hours — that's stale news, not today's brief.
 
 ═══ RAW INTELLIGENCE ═══
 """
